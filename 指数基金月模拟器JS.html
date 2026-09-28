@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>指数基金月模拟器-网页版-script制作</title>
+    <link rel="icon" type="image/png" href="1.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        input[type="number"]:focus {
+            border-color: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-calculate {
+            width: 100%;
+            padding: 16px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-calculate:active {
+            transform: translateY(0);
+        }
+
+        .result-area {
+            margin-top: 28px;
+            padding: 24px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: none;
+            animation: fadeIn 0.6s ease;
+        }
+
+        .result-area.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-text {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 16px;
+            line-height: 1.8;
+            text-align: center;
+        }
+
+        .result-highlight {
+            color: #ffd700;
+            font-size: 28px;
+            font-weight: 700;
+            text-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            margin: 16px 0;
+        }
+
+        .formula-info {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>指数基金月模拟器</h1>
+        <p class="subtitle">逆行script-制作</p>
+        
+        <div class="input-group">
+            <label for="monthly">每月定投金额（元）</label>
+            <input type="number" id="monthly" placeholder="请输入…" min="0" step="0.01">
+        </div>
+        
+        <div class="input-group">
+            <label for="years">投资年限（年）</label>
+            <input type="number" id="years" placeholder="请输入…" min="1" max="100">
+        </div>
+        
+        <button class="btn-calculate" onclick="calculate()">开始计算</button>
+        
+        <div class="result-area" id="resultArea">
+            <div class="result-text" id="resultText"></div>
+            <div class="divider"></div>
+            <div class="formula-info">
+                计算方式：月收益 = 定投金额 × 0.4431<br>
+                总收益 = 月收益 × 12 × 年数
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            const monthlyInput = document.getElementById('monthly').value;
+            const yearsInput = document.getElementById('years').value;
+            const resultArea = document.getElementById('resultArea');
+            const resultText = document.getElementById('resultText');
+
+            // 验证输入
+            if (!monthlyInput || !yearsInput) {
+                alert('请填写完整的定投金额和年限');
+                return;
+            }
+
+            const monthly = parseFloat(monthlyInput);
+            const years = parseInt(yearsInput);
+
+            if (monthly <= 0 || years <= 0) {
+                alert('请输入有效的正数');
+                return;
+            }
+
+            // 计算逻辑（与原Python程序一致）
+            const w = monthly * 0.4431;
+            const months = years * 12;
+            const end = months * w;
+
+            // 生成结果文本
+            let timeDesc = '';
+            if (years <= 20) {
+                timeDesc = `${years}年日月轮转…`;
+            }if (years >= 50) {
+                timeDesc = `${years}年沧海桑田…`;
+            }
+
+            // 延迟显示模拟原程序的time.sleep效果
+            resultArea.classList.remove('show');
+            
+            setTimeout(() => {
+                resultText.innerHTML = `
+                    <p>${timeDesc}</p>
+                    <p style="margin-top: 12px;">共收益</p>
+                    <p class="result-highlight">${end.toFixed(2)}</p>
+                    <p>元</p>
+                `;
+                resultArea.classList.add('show');
+            }, 500);
+        }
+
+        // 支持回车键触发计算
+        document.getElementById('years').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculate();
+            }
+        });
+    </script>
+</body>
+</html>
